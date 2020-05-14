@@ -1,7 +1,7 @@
-keygen <img src="https://www.buybitcoinworldwide.com/img/segwit.png" width="100">
-======
+btckeygen <img src="https://www.buybitcoinworldwide.com/img/segwit.png" width="100">
+=========
 
-[![license](https://img.shields.io/badge/license-WTFPL%20--%20Do%20What%20the%20Fuck%20You%20Want%20to%20Public%20License-green.svg)](https://github.com/modood/keygen/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/license-WTFPL%20--%20Do%20What%20the%20Fuck%20You%20Want%20to%20Public%20License-green.svg)](https://github.com/modood/btckeygen/blob/master/LICENSE)
 
 A simple and easy to use bitcoin key generator
 
@@ -22,20 +22,20 @@ Can I trust this code?
 
 > We recommend every user of this library audit and verify any underlying code for its validity and suitability.
 >
-> You can do so by using this tool. https://iancoleman.io/bip39/
+> You can do so by using this tool: https://iancoleman.io/bip39/
 
 Installation
 ------------
 
 ```
-$ go get github.com/modood/keygen
+$ go get -u github.com/modood/btckeygen
 ```
 
 Usage
 -----
 
 ```
-Usage of keygen:
+Usage of btckeygen:
   -bip39     bool   mnemonic code for generating deterministic keys (default false)
   -pass      string protect bip39 mnemonic with a passphrase (default "")
   -n         int    set number of keys to generate (default 20)
@@ -47,7 +47,7 @@ Example
 **generate compressed public key:**
 
 ```txt
-$ keygen
+$ btckeygen
 
 Bitcoin Address                    WIF(Wallet Import Format)                            SegWit(bech32)                             SegWit(nested)
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ Bitcoin Address                    WIF(Wallet Import Format)                    
 **generate bip39 mnemonic with passphrase:**
 
 ```txt
-$ keygen -bip39 -pass=123456 -n 10
+$ btckeygen -bip39 -pass=123456 -n 10
 
 BIP39 Mnemonic:    voyage blind unit shoulder yellow attitude mule all hire above obvious swap
 BIP39 Passphrase:  123456
