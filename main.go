@@ -15,9 +15,6 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
-// Compare with https://bitaps.com/bip32
-// next step is to generate the private key from WIF and do transactions
-
 // Purpose BIP43 - Purpose Field for Deterministic Wallets
 // https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki
 //
