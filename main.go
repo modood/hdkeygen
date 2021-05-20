@@ -81,14 +81,17 @@ type KeyManager struct {
 // bitSize has to be a multiple 32 and be within the inclusive range of {128, 256}
 // 128: 12 phrases
 // 256: 24 phrases
-func NewKeyManager(bitSize int, passphrase string) (*KeyManager, error) {
-	entropy, err := bip39.NewEntropy(bitSize)
-	if err != nil {
-		return nil, err
-	}
-	mnemonic, err := bip39.NewMnemonic(entropy)
-	if err != nil {
-		return nil, err
+func NewKeyManager(bitSize int, passphrase, mnemonic string) (*KeyManager, error) {
+
+	if(mnemonic == ""){
+		entropy, err := bip39.NewEntropy(bitSize)
+		if err != nil {
+			return nil, err
+		}
+		mnemonic, err = bip39.NewMnemonic(entropy)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	km := &KeyManager{
@@ -317,6 +320,7 @@ func main() {
 	bip39 := flag.Bool("bip39", false, "mnemonic code for generating deterministic keys")
 	pass := flag.String("pass", "", "protect bip39 mnemonic with a passphrase")
 	number := flag.Int("n", 10, "set number of keys to generate")
+	mnemonic := flag.String("mnemonic", "", "optional list of words to re-generate a root key")
 
 	flag.Parse()
 
@@ -335,7 +339,7 @@ func main() {
 		return
 	}
 
-	km, err := NewKeyManager(128, *pass)
+	km, err := NewKeyManager(128, *pass, *mnemonic)
 	if err != nil {
 		log.Fatal(err)
 	}
