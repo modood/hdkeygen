@@ -39,6 +39,7 @@ Usage of btckeygen:
   -bip39     bool   mnemonic code for generating deterministic keys (default false)
   -pass      string protect bip39 mnemonic with a passphrase (default "")
   -n         int    set number of keys to generate (default 20)
+  -mnemonic  string optional list of words to re-generate a root key
 ```
 
 Example
@@ -113,6 +114,12 @@ m/84'/0'/0'/0/7    bc1qmntu8hq7cg799x42lw4apn63s6w0pjyjy60gep L35w9XduSfYhBDgXDz
 m/84'/0'/0'/0/8    bc1q8ydc6runthe97n6k7slt5xqeh9dl8enl6kvk0j L1p29HYEgB7f1HGh1vEnneuzne8D7LaEPt5AgnArNnJ2LtiemwUK
 m/84'/0'/0'/0/9    bc1qw4jlevwft2yw08g9auga8vtk0zsvzxfmm4jmlc L2p5DvXgJ8xLq6hjVuaWeyZe6pyPRP8hCbW7me6UVHfquNVoK8QP
 
+```
+
+**re-generate a root key with existing mnemonic:**
+
+```txt
+$ btckeygen -bip39 -pass=123456 -mnemonic "voyage blind unit shoulder yellow attitude mule all hire above obvious swap"
 ```
 
 License
