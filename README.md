@@ -28,7 +28,7 @@ Installation
 ------------
 
 ```
-$ go get -u github.com/modood/btckeygen
+$ go install github.com/modood/btckeygen@latest
 ```
 
 Usage
