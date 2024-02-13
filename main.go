@@ -412,8 +412,8 @@ func main() {
 	}
 	fmt.Println()
 
-	fmt.Printf("\n%-18s %-42s %s\n", "Path(BIP86)", "Taproot(bech32m)", "WIF(Wallet Import Format)")
-	fmt.Println(strings.Repeat("-", 114))
+	fmt.Printf("\n%-18s %-62s %s\n", "Path(BIP86)", "Taproot(bech32m)", "WIF(Wallet Import Format)")
+	fmt.Println(strings.Repeat("-", 134))
 	for i := 0; i < *number; i++ {
 		key, err := km.GetKey(PurposeBIP86, CoinTypeBTC, 0, 0, uint32(i))
 		if err != nil {
