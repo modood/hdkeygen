@@ -11,6 +11,7 @@ A simple and easy to use bitcoin key generator
 *   BIP44 - Multi-Account Hierarchy for Deterministic Wallets
 *   BIP49 - Derivation scheme for P2WPKH-nested-in-P2SH based accounts
 *   BIP84 - Derivation scheme for P2WPKH based accounts
+*   BIP86 - Derivation scheme for Pay-to-Taproot (P2TR) based accounts
 *   BIP173 - Base32 address format for native v0-16 witness outputs
 *   SLIP44 - Registered coin types for BIP-0044
 
