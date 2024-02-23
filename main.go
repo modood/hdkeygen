@@ -7,10 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/btcsuite/btcd/btcec"
+	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/schnorr"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 )
@@ -35,6 +36,7 @@ const (
 	PurposeBIP44 Purpose = 0x8000002C // 44' BIP44
 	PurposeBIP49 Purpose = 0x80000031 // 49' BIP49
 	PurposeBIP84 Purpose = 0x80000054 // 84' BIP84
+	PurposeBIP86 Purpose = 0x80000056 // 86' BIP86 //taprrot
 )
 
 // CoinType SLIP-0044 : Registered coin types for BIP-0044
@@ -57,8 +59,8 @@ type Key struct {
 	bip32Key *bip32.Key
 }
 
-func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested string, err error) {
-	prvKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), k.bip32Key.Key)
+func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested, tapRoot string, err error) {
+	prvKey, _ := btcec.PrivKeyFromBytes(k.bip32Key.Key)
 	return GenerateFromBytes(prvKey, compress)
 }
 
@@ -83,7 +85,7 @@ type KeyManager struct {
 // 256: 24 phrases
 func NewKeyManager(bitSize int, passphrase, mnemonic string) (*KeyManager, error) {
 
-	if(mnemonic == ""){
+	if mnemonic == "" {
 		entropy, err := bip39.NewEntropy(bitSize)
 		if err != nil {
 			return nil, err
@@ -266,19 +268,19 @@ func (km *KeyManager) GetKey(purpose, coinType, account, change, index uint32) (
 	return &Key{path: path, bip32Key: key}, nil
 }
 
-func Generate(compress bool) (wif, address, segwitBech32, segwitNested string, err error) {
-	prvKey, err := btcec.NewPrivateKey(btcec.S256())
+func Generate(compress bool) (wif, address, segwitBech32, segwitNested string, tapRoot string, err error) {
+	prvKey, err := btcec.NewPrivateKey()
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	return GenerateFromBytes(prvKey, compress)
 }
 
-func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested string, err error) {
+func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, tapRoot string, err error) {
 	// generate the wif(wallet import format) string
 	btcwif, err := btcutil.NewWIF(prvKey, &chaincfg.MainNetParams, compress)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	wif = btcwif.String()
 
@@ -286,7 +288,7 @@ func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, s
 	serializedPubKey := btcwif.SerializePubKey()
 	addressPubKey, err := btcutil.NewAddressPubKey(serializedPubKey, &chaincfg.MainNetParams)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	address = addressPubKey.EncodeAddress()
 
@@ -294,7 +296,7 @@ func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, s
 	witnessProg := btcutil.Hash160(serializedPubKey)
 	addressWitnessPubKeyHash, err := btcutil.NewAddressWitnessPubKeyHash(witnessProg, &chaincfg.MainNetParams)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	segwitBech32 = addressWitnessPubKeyHash.EncodeAddress()
 
@@ -304,15 +306,23 @@ func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, s
 	// and malleability fixes.
 	serializedScript, err := txscript.PayToAddrScript(addressWitnessPubKeyHash)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	addressScriptHash, err := btcutil.NewAddressScriptHash(serializedScript, &chaincfg.MainNetParams)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", "", "", err
 	}
 	segwitNested = addressScriptHash.EncodeAddress()
 
-	return wif, address, segwitBech32, segwitNested, nil
+	//taproot
+	tapKey := txscript.ComputeTaprootKeyNoScript(prvKey.PubKey())
+	addressTaproot, err := btcutil.NewAddressTaproot(schnorr.SerializePubKey(tapKey), &chaincfg.MainNetParams)
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+	tapRoot = addressTaproot.EncodeAddress()
+
+	return wif, address, segwitBech32, segwitNested, tapRoot, nil
 }
 
 func main() {
@@ -325,15 +335,15 @@ func main() {
 	flag.Parse()
 
 	if !*bip39 {
-		fmt.Printf("\n%-34s %-52s %-42s %s\n", "Bitcoin Address", "WIF(Wallet Import Format)", "SegWit(bech32)", "SegWit(nested)")
-		fmt.Println(strings.Repeat("-", 165))
+		fmt.Printf("\n%-34s %-52s %-42s %-34s %s\n", "Bitcoin Address", "WIF(Wallet Import Format)", "SegWit(bech32)", "SegWit(nested)", "Taproot(bech32m)")
+		fmt.Println(strings.Repeat("-", 228))
 
 		for i := 0; i < *number; i++ {
-			wif, address, segwitBech32, segwitNested, err := Generate(compress)
+			wif, address, segwitBech32, segwitNested, tapRoot, err := Generate(compress)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("%-34s %s %s %s\n", address, wif, segwitBech32, segwitNested)
+			fmt.Printf("%-34s %s %s %s %s\n", address, wif, segwitBech32, segwitNested, tapRoot)
 		}
 		fmt.Println()
 		return
@@ -363,7 +373,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, address, _, _, err := key.Encode(compress)
+		wif, address, _, _, _, err := key.Encode(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -378,7 +388,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, _, segwitNested, err := key.Encode(compress)
+		wif, _, _, segwitNested, _, err := key.Encode(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -393,12 +403,28 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, segwitBech32, _, err := key.Encode(compress)
+		wif, _, segwitBech32, _, _, err := key.Encode(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Printf("%-18s %s %s\n", key.GetPath(), segwitBech32, wif)
+	}
+	fmt.Println()
+
+	fmt.Printf("\n%-18s %-62s %s\n", "Path(BIP86)", "Taproot(bech32m)", "WIF(Wallet Import Format)")
+	fmt.Println(strings.Repeat("-", 134))
+	for i := 0; i < *number; i++ {
+		key, err := km.GetKey(PurposeBIP86, CoinTypeBTC, 0, 0, uint32(i))
+		if err != nil {
+			log.Fatal(err)
+		}
+		wif, _, _, _, tapRoot, err := key.Encode(compress)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%-18s %s %s\n", key.GetPath(), tapRoot, wif)
 	}
 	fmt.Println()
 }
