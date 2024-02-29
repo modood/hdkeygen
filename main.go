@@ -59,7 +59,7 @@ type Key struct {
 	bip32Key *bip32.Key
 }
 
-func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested, tapRoot string, err error) {
+func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
 	prvKey, _ := btcec.PrivKeyFromBytes(k.bip32Key.Key)
 	return GenerateFromBytes(prvKey, compress)
 }
@@ -84,7 +84,6 @@ type KeyManager struct {
 // 128: 12 phrases
 // 256: 24 phrases
 func NewKeyManager(bitSize int, passphrase, mnemonic string) (*KeyManager, error) {
-
 	if mnemonic == "" {
 		entropy, err := bip39.NewEntropy(bitSize)
 		if err != nil {
@@ -268,15 +267,7 @@ func (km *KeyManager) GetKey(purpose, coinType, account, change, index uint32) (
 	return &Key{path: path, bip32Key: key}, nil
 }
 
-func Generate(compress bool) (wif, address, segwitBech32, segwitNested string, tapRoot string, err error) {
-	prvKey, err := btcec.NewPrivateKey()
-	if err != nil {
-		return "", "", "", "", "", err
-	}
-	return GenerateFromBytes(prvKey, compress)
-}
-
-func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, tapRoot string, err error) {
+func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
 	// generate the wif(wallet import format) string
 	btcwif, err := btcutil.NewWIF(prvKey, &chaincfg.MainNetParams, compress)
 	if err != nil {
@@ -320,31 +311,48 @@ func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, s
 	if err != nil {
 		return "", "", "", "", "", err
 	}
-	tapRoot = addressTaproot.EncodeAddress()
+	taproot = addressTaproot.EncodeAddress()
 
-	return wif, address, segwitBech32, segwitNested, tapRoot, nil
+	return wif, address, segwitBech32, segwitNested, taproot, nil
 }
 
 func main() {
 	compress := true // generate a compressed public key
-	bip39 := flag.Bool("bip39", false, "mnemonic code for generating deterministic keys")
+
 	pass := flag.String("pass", "", "protect bip39 mnemonic with a passphrase")
 	number := flag.Int("n", 10, "set number of keys to generate")
 	mnemonic := flag.String("mnemonic", "", "optional list of words to re-generate a root key")
 
+	wifInput := flag.String("wif", "", "decode the private key from wif, then generate the bitcoin address.")
+
 	flag.Parse()
 
-	if !*bip39 {
-		fmt.Printf("\n%-34s %-52s %-42s %-34s %s\n", "Bitcoin Address", "WIF(Wallet Import Format)", "SegWit(bech32)", "SegWit(nested)", "Taproot(bech32m)")
-		fmt.Println(strings.Repeat("-", 228))
-
-		for i := 0; i < *number; i++ {
-			wif, address, segwitBech32, segwitNested, tapRoot, err := Generate(compress)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%-34s %s %s %s %s\n", address, wif, segwitBech32, segwitNested, tapRoot)
+	if *wifInput != "" {
+		wif, err := btcutil.DecodeWIF(*wifInput)
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		wifCompressed, addressCompressed, segwitBech32, segwitNested, taproot, err := GenerateFromBytes(wif.PrivKey, true)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		wifUncompressed, addressUncompressed, _, _, _, err := GenerateFromBytes(wif.PrivKey, false)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println("\n Wallet Import Format:")
+		fmt.Printf(" *   %-24s %s\n", "WIF(compressed):", wifCompressed)
+		fmt.Printf(" *   %-24s %s\n", "WIF(uncompressed):", wifUncompressed)
+
+		fmt.Println("\n Public Addresses:")
+		fmt.Printf(" *   %-24s %s\n", "Legacy(compresed):", addressCompressed)
+		fmt.Printf(" *   %-24s %s\n", "Legacy(uncompressed):", addressUncompressed)
+		fmt.Printf(" *   %-24s %s\n", "SegWit(nested):", segwitNested)
+		fmt.Printf(" *   %-24s %s\n", "SegWit(bech32):", segwitBech32)
+		fmt.Printf(" *   %-24s %s\n", "Taproot(bech32m):", taproot)
 		fmt.Println()
 		return
 	}
@@ -366,7 +374,7 @@ func main() {
 	fmt.Printf("%-18s %x\n", "BIP39 Seed:", km.GetSeed())
 	fmt.Printf("%-18s %s\n", "BIP32 Root Key:", masterKey.B58Serialize())
 
-	fmt.Printf("\n%-18s %-34s %-52s\n", "Path(BIP44)", "Bitcoin Address", "WIF(Wallet Import Format)")
+	fmt.Printf("\n%-18s %-34s %-52s\n", "Path(BIP44)", "Legacy(P2PKH, compresed)", "WIF(Wallet Import Format)")
 	fmt.Println(strings.Repeat("-", 106))
 	for i := 0; i < *number; i++ {
 		key, err := km.GetKey(PurposeBIP44, CoinTypeBTC, 0, 0, uint32(i))
@@ -381,7 +389,7 @@ func main() {
 		fmt.Printf("%-18s %-34s %s\n", key.GetPath(), address, wif)
 	}
 
-	fmt.Printf("\n%-18s %-34s %s\n", "Path(BIP49)", "SegWit(nested)", "WIF(Wallet Import Format)")
+	fmt.Printf("\n%-18s %-34s %s\n", "Path(BIP49)", "SegWit(P2WPKH-nested-in-P2SH)", "WIF(Wallet Import Format)")
 	fmt.Println(strings.Repeat("-", 106))
 	for i := 0; i < *number; i++ {
 		key, err := km.GetKey(PurposeBIP49, CoinTypeBTC, 0, 0, uint32(i))
@@ -396,7 +404,7 @@ func main() {
 		fmt.Printf("%-18s %s %s\n", key.GetPath(), segwitNested, wif)
 	}
 
-	fmt.Printf("\n%-18s %-42s %s\n", "Path(BIP84)", "SegWit(bech32)", "WIF(Wallet Import Format)")
+	fmt.Printf("\n%-18s %-42s %s\n", "Path(BIP84)", "SegWit(P2WPKH, bech32)", "WIF(Wallet Import Format)")
 	fmt.Println(strings.Repeat("-", 114))
 	for i := 0; i < *number; i++ {
 		key, err := km.GetKey(PurposeBIP84, CoinTypeBTC, 0, 0, uint32(i))
@@ -410,21 +418,20 @@ func main() {
 
 		fmt.Printf("%-18s %s %s\n", key.GetPath(), segwitBech32, wif)
 	}
-	fmt.Println()
 
-	fmt.Printf("\n%-18s %-62s %s\n", "Path(BIP86)", "Taproot(bech32m)", "WIF(Wallet Import Format)")
+	fmt.Printf("\n%-18s %-62s %s\n", "Path(BIP86)", "Taproot(P2TR, bech32m)", "WIF(Wallet Import Format)")
 	fmt.Println(strings.Repeat("-", 134))
 	for i := 0; i < *number; i++ {
 		key, err := km.GetKey(PurposeBIP86, CoinTypeBTC, 0, 0, uint32(i))
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, _, _, tapRoot, err := key.Encode(compress)
+		wif, _, _, _, taproot, err := key.Encode(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%-18s %s %s\n", key.GetPath(), tapRoot, wif)
+		fmt.Printf("%-18s %s %s\n", key.GetPath(), taproot, wif)
 	}
 	fmt.Println()
 }
