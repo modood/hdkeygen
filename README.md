@@ -23,8 +23,6 @@ Can I trust this code?
 > Don't Trust. Verify.
 
 > We recommend every user of this library audit and verify any underlying code for its validity and suitability.
->
-> You can do so by using this tool: https://iancoleman.io/bip39/
 
 Installation
 ------------
@@ -65,8 +63,6 @@ $ btckeygen -wif KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN
  *   SegWit(bech32):          bc1qzaslgufxmwrrj9f224h3rztyjn5jusmy0hkk8j
  *   Taproot(bech32m):        bc1pzf49m706xk5xnmkqj368tvmf48aav8jqg3mhr5ujdp79u8jcvx4s7scxzc
 ```
-
-> verify using this tool: [KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN](https://privatekeys.pw/key/KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN)
 
 **generate bip39 mnemonic with passphrase:**
 
