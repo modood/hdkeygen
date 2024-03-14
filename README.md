@@ -1,9 +1,9 @@
-btckeygen <img src="https://www.buybitcoinworldwide.com/img/segwit.png" width="100">
-=========
+hdkeygen <img src="https://www.buybitcoinworldwide.com/img/segwit.png" width="100">
+========
 
-[![license](https://img.shields.io/badge/license-WTFPL%20--%20Do%20What%20the%20Fuck%20You%20Want%20to%20Public%20License-green.svg)](https://github.com/modood/btckeygen/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/license-WTFPL%20--%20Do%20What%20the%20Fuck%20You%20Want%20to%20Public%20License-green.svg)](https://github.com/modood/hdkeygen/blob/master/LICENSE)
 
-A simple and easy to use bitcoin key generator
+A very simple and easy to use bitcoin(btc)/ethereum(eth) key/wallet generator.
 
 *   BIP32 - Hierarchical Deterministic Wallets
 *   BIP39 - Mnemonic code for generating deterministic keys
@@ -28,14 +28,14 @@ Installation
 ------------
 
 ```
-$ go install github.com/modood/btckeygen@latest
+$ go install github.com/modood/hdkeygen@latest
 ```
 
 Usage
 -----
 
 ```
-Usage of btckeygen:
+Usage of hdkeygen:
 
   -mnemonic string  optional list of words to re-generate a root key
   -pass     string  protect bip39 mnemonic with a passphrase
@@ -50,7 +50,7 @@ Example
 **generate with existing wif:**
 
 ```txt
-$ btckeygen -wif KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN
+$ hdkeygen -wif KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN
 
  Wallet Import Format:
  *   WIF(compressed):         KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN
@@ -67,7 +67,7 @@ $ btckeygen -wif KyBmvuMWYT9aPRf8tT3oBJsmjwXpgWbFLwbUDhezAx9EQX1PpJXN
 **generate bip39 mnemonic with passphrase:**
 
 ```txt
-$ btckeygen -pass=123456 -n 10
+$ hdkeygen -pass=123456 -n 10
 
 BIP39 Mnemonic:    ordinary volcano company hedgehog usage success awkward filter state energy wool point
 BIP39 Passphrase:  123456
@@ -143,7 +143,7 @@ m/44'/60'/0'/0/9   0xd997f7076FE26510Be4966F5cb42bcf5c1aD83Df e41c4d7ea125fa28be
 **re-generate a root key with existing mnemonic:**
 
 ```txt
-$ btckeygen -mnemonic "ordinary volcano company hedgehog usage success awkward filter state energy wool point" -pass=123456
+$ hdkeygen -mnemonic "ordinary volcano company hedgehog usage success awkward filter state energy wool point" -pass=123456
 ```
 
 License
