@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/crypto/sha3"
 )
 
 // Purpose BIP43 - Purpose Field for Deterministic Wallets
@@ -433,5 +435,55 @@ func main() {
 
 		fmt.Printf("%-18s %s %s\n", key.GetPath(), taproot, wif)
 	}
+
+	fmt.Printf("\n%-18s %-42s %-52s\n", "Path(BIP44)", "Ethereum(EIP55)", "Private Key(hex)")
+	fmt.Println(strings.Repeat("-", 126))
+	for i := 0; i < *number; i++ {
+		key, err := km.GetKey(PurposeBIP44, CoinTypeETH, 0, 0, uint32(i))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		privateKey, address := encodeEthereum(key.bip32Key.Key)
+		fmt.Printf("%-18s %s %s\n", key.GetPath(), address, privateKey)
+	}
+
 	fmt.Println()
+}
+
+// encodeEthereum encodes the private key and address for Ethereum.
+func encodeEthereum(privateKeyBytes []byte) (privateKey, address string) {
+	_, pubKey := btcec.PrivKeyFromBytes(privateKeyBytes)
+
+	publicKey := pubKey.ToECDSA()
+	publicKeyBytes := append(publicKey.X.Bytes(), publicKey.Y.Bytes()...)
+
+	// Ethereum uses the last 20 bytes of the keccak256 hash of the public key
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(publicKeyBytes)
+	addr := hash.Sum(nil)
+	addr = addr[len(addr)-20:]
+
+	return hex.EncodeToString(privateKeyBytes), eip55checksum(fmt.Sprintf("0x%x", addr))
+}
+
+// eip55checksum implements the EIP55 checksum address encoding.
+// this function is copied from the go-ethereum library: go-ethereum/common/types.go checksumHex method
+func eip55checksum(address string) string {
+	buf := []byte(address)
+	sha := sha3.NewLegacyKeccak256()
+	sha.Write(buf[2:])
+	hash := sha.Sum(nil)
+	for i := 2; i < len(buf); i++ {
+		hashByte := hash[(i-2)/2]
+		if i%2 == 0 {
+			hashByte = hashByte >> 4
+		} else {
+			hashByte &= 0xf
+		}
+		if buf[i] > '9' && hashByte > 7 {
+			buf[i] -= 32
+		}
+	}
+	return string(buf[:])
 }

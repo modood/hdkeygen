@@ -14,6 +14,7 @@ A simple and easy to use bitcoin key generator
 *   BIP86 - Derivation scheme for Pay-to-Taproot (P2TR) based accounts
 *   BIP173 - Base32 address format for native v0-16 witness outputs
 *   SLIP44 - Registered coin types for BIP-0044
+*   EIP55 - Ethereum Mixed-case checksum address encoding
 
 
 Can I trust this code?
@@ -129,6 +130,18 @@ m/86'/0'/0'/0/7    bc1p52dykhfv7tdkmnset7hkzr5uc2g72vntv0tcgvggf25ddlkweu6s5e729
 m/86'/0'/0'/0/8    bc1pr34ruah5pq6s5l0w6ntueazesaqrqeugkrqwexe9qd325kyma2hsgw3knw Kxf3oR9dquE7PNUaVbbn4yA7E1mrmFzY8A9Md6pNrcdfS8UjW52K
 m/86'/0'/0'/0/9    bc1paj39mjp28znlg5mttzss93e0lxx8tnf56lfc0834p0zq3ujaw2hq7zcmkr Kx45eoQxLmjFsCRuYcAe5crTcdiNgcWiqDTTFaiWUmrqgZ8UH64a
 
+Path(BIP44)        Ethereum(EIP55)                            Private Key(hex)
+------------------------------------------------------------------------------------------------------------------------------
+m/44'/60'/0'/0/0   0x84176087d47dFfc816dC22AEd0B73c1a0858A9a9 e9390301c5fc4d18569d6e55176a0759ca2c4bde0037b2d4edb46d85bc819efa
+m/44'/60'/0'/0/1   0x40F5Ea577985c169BE62F30E21448873782801Ce 96638b915ac0d867d557465165369c2908e7c5b45ec64ef23d075564ddddd38c
+m/44'/60'/0'/0/2   0xdCE2C1a45F1b9b39f4b2B18276B6FDCb1252Cd14 c1c276e77478b38327459cc64c749130c50ba4bd971c0bde4a2ed83564858650
+m/44'/60'/0'/0/3   0xe1314B362eec5A1E9A0AdFc7e6085A9eE5dcB478 4e802e15994d0e76073c94ae4b692e203a799017e3a71d6d7a514ac243945b87
+m/44'/60'/0'/0/4   0x5d56F4081D1c3d44b80A98F5C1E48a3964B1F065 7af9e145e789969d9231c3f0134feb0573ada06a78a98a054cb590ef752a2ef9
+m/44'/60'/0'/0/5   0xA1F5aeb76Dd50d8ed41F8Cfa8FA89A2F75691b72 87c11816f5a4348eef022f382fd2febdd148dc06cd766dffd96914363b6fc6a1
+m/44'/60'/0'/0/6   0x2Cf9477B0AAE3C1CE85c034616B7cB3702576E45 d0f687259719372d0d6d6eaf7e5d1f839279000ac7de7bddaaf37fcf959e656f
+m/44'/60'/0'/0/7   0xab1e882A3E07192D45595fEDe116F5ce7AE73210 ee6a8125095536b00b219007a562898f49d0708c8d4cb43926cb613773e90f2a
+m/44'/60'/0'/0/8   0x4cB8B7984818b5deA7c3dD638D9931145af26e92 23f8d138ec530626bfe553775c4db9dfbfa47cd27f9ccef051f399e7760c05c9
+m/44'/60'/0'/0/9   0xd997f7076FE26510Be4966F5cb42bcf5c1aD83Df e41c4d7ea125fa28be536687b70ea58d4d85338fd773e46edc08f90e8fdcd2a5
 ```
 
 **re-generate a root key with existing mnemonic:**
