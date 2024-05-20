@@ -456,7 +456,7 @@ func encodeEthereum(privateKeyBytes []byte) (privateKey, address string) {
 	_, pubKey := btcec.PrivKeyFromBytes(privateKeyBytes)
 
 	publicKey := pubKey.ToECDSA()
-	publicKeyBytes := append(publicKey.X.Bytes(), publicKey.Y.Bytes()...)
+	publicKeyBytes := append(publicKey.X.FillBytes(make([]byte, 32)), publicKey.Y.FillBytes(make([]byte, 32))...)
 
 	// Ethereum uses the last 20 bytes of the keccak256 hash of the public key
 	hash := sha3.NewLegacyKeccak256()
