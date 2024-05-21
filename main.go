@@ -47,9 +47,7 @@ type CoinType = uint32
 
 const (
 	CoinTypeBTC CoinType = 0x80000000
-	CoinTypeLTC CoinType = 0x80000002
 	CoinTypeETH CoinType = 0x8000003c
-	CoinTypeEOS CoinType = 0x800000c2
 )
 
 const (
@@ -307,7 +305,7 @@ func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, s
 	}
 	segwitNested = addressScriptHash.EncodeAddress()
 
-	//taproot
+	// generate a taproot address
 	tapKey := txscript.ComputeTaprootKeyNoScript(prvKey.PubKey())
 	addressTaproot, err := btcutil.NewAddressTaproot(schnorr.SerializePubKey(tapKey), &chaincfg.MainNetParams)
 	if err != nil {
@@ -455,22 +453,32 @@ func main() {
 func encodeEthereum(privateKeyBytes []byte) (privateKey, address string) {
 	_, pubKey := btcec.PrivKeyFromBytes(privateKeyBytes)
 
+	// Public ECDSA Key
 	publicKey := pubKey.ToECDSA()
+
+	// ethereum public key must be 64byte (32byte x 32byte y coordinates
+	// this is uncompressed ECDSA public key without 04 prefix
 	publicKeyBytes := append(publicKey.X.FillBytes(make([]byte, 32)), publicKey.Y.FillBytes(make([]byte, 32))...)
 
-	// Ethereum uses the last 20 bytes of the keccak256 hash of the public key
+	// Keccak-256 hash of the public key
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(publicKeyBytes)
 	addr := hash.Sum(nil)
+
+	// Ethereum uses the last 20 bytes of the Keccak-256 hash of the public key
+	// this is ethereum address(without 0x prefix) but currently have not checksum
 	addr = addr[len(addr)-20:]
 
 	return hex.EncodeToString(privateKeyBytes), eip55checksum(fmt.Sprintf("0x%x", addr))
 }
 
 // eip55checksum implements the EIP55 checksum address encoding.
+// https://github.com/ethereum/ercs/blob/master/ERCS/erc-55.md
+// In English, convert the address to hex, but if the i th digit is a letter (ie. it's one of abcdef)
+// print it in uppercase if the 4*i th bit of the hash of the lowercase hexadecimal address is 1 otherwise print it in lowercase.
 // this function is copied from the go-ethereum library: go-ethereum/common/types.go checksumHex method
 func eip55checksum(address string) string {
-	buf := []byte(address)
+	buf := []byte(strings.ToLower(address))
 	sha := sha3.NewLegacyKeccak256()
 	sha.Write(buf[2:])
 	hash := sha.Sum(nil)
