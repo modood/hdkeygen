@@ -54,7 +54,7 @@ const (
 )
 
 type Key struct {
-	path     string
+	Path     string
 	bip32Key *bip32.Key
 }
 
@@ -67,24 +67,18 @@ func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested, t
 // bip44 define the following 5 levels in BIP32 path:
 // m / purpose' / coin_type' / account' / change / address_index
 
-func (k *Key) GetPath() string {
-	return k.path
-}
-
 type KeyManager struct {
-	mnemonic   string
-	passphrase string
+	Mnemonic   string
+	Passphrase string
 	keys       map[string]*bip32.Key
 	mux        sync.Mutex
 }
 
 // NewKeyManager return new key manager
-// bitSize has to be a multiple 32 and be within the inclusive range of {128, 256}
-// 128: 12 phrases
-// 256: 24 phrases
-func NewKeyManager(bitSize int, passphrase, mnemonic string) (*KeyManager, error) {
+// if mnemonic is not provided, it will generate a new mnemonic with 128 bits of entropy, which is 12 words
+func NewKeyManager(mnemonic, passphrase string) (*KeyManager, error) {
 	if mnemonic == "" {
-		entropy, err := bip39.NewEntropy(bitSize)
+		entropy, err := bip39.NewEntropy(128)
 		if err != nil {
 			return nil, err
 		}
@@ -95,23 +89,15 @@ func NewKeyManager(bitSize int, passphrase, mnemonic string) (*KeyManager, error
 	}
 
 	km := &KeyManager{
-		mnemonic:   mnemonic,
-		passphrase: passphrase,
+		Mnemonic:   mnemonic,
+		Passphrase: passphrase,
 		keys:       make(map[string]*bip32.Key, 0),
 	}
 	return km, nil
 }
 
-func (km *KeyManager) GetMnemonic() string {
-	return km.mnemonic
-}
-
-func (km *KeyManager) GetPassphrase() string {
-	return km.passphrase
-}
-
 func (km *KeyManager) GetSeed() []byte {
-	return bip39.NewSeed(km.GetMnemonic(), km.GetPassphrase())
+	return bip39.NewSeed(km.Mnemonic, km.Passphrase)
 }
 
 func (km *KeyManager) getKey(path string) (*bip32.Key, bool) {
@@ -248,7 +234,7 @@ func (km *KeyManager) GetKey(purpose, coinType, account, change, index uint32) (
 
 	key, ok := km.getKey(path)
 	if ok {
-		return &Key{path: path, bip32Key: key}, nil
+		return &Key{Path: path, bip32Key: key}, nil
 	}
 
 	parent, err := km.GetChangeKey(purpose, coinType, account, change)
@@ -263,7 +249,7 @@ func (km *KeyManager) GetKey(purpose, coinType, account, change, index uint32) (
 
 	km.setKey(path, key)
 
-	return &Key{path: path, bip32Key: key}, nil
+	return &Key{Path: path, bip32Key: key}, nil
 }
 
 func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
@@ -356,7 +342,7 @@ func main() {
 		return
 	}
 
-	km, err := NewKeyManager(128, *pass, *mnemonic)
+	km, err := NewKeyManager(*mnemonic, *pass)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -364,11 +350,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	passphrase := km.GetPassphrase()
+	passphrase := km.Passphrase
 	if passphrase == "" {
 		passphrase = "<none>"
 	}
-	fmt.Printf("\n%-18s %s\n", "BIP39 Mnemonic:", km.GetMnemonic())
+	fmt.Printf("\n%-18s %s\n", "BIP39 Mnemonic:", km.Mnemonic)
 	fmt.Printf("%-18s %s\n", "BIP39 Passphrase:", passphrase)
 	fmt.Printf("%-18s %x\n", "BIP39 Seed:", km.GetSeed())
 	fmt.Printf("%-18s %s\n", "BIP32 Root Key:", masterKey.B58Serialize())
@@ -385,7 +371,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%-18s %-34s %s\n", key.GetPath(), address, wif)
+		fmt.Printf("%-18s %-34s %s\n", key.Path, address, wif)
 	}
 
 	fmt.Printf("\n%-18s %-34s %s\n", "Path(BIP49)", "SegWit(P2WPKH-nested-in-P2SH)", "WIF(Wallet Import Format)")
@@ -400,7 +386,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%-18s %s %s\n", key.GetPath(), segwitNested, wif)
+		fmt.Printf("%-18s %s %s\n", key.Path, segwitNested, wif)
 	}
 
 	fmt.Printf("\n%-18s %-42s %s\n", "Path(BIP84)", "SegWit(P2WPKH, bech32)", "WIF(Wallet Import Format)")
@@ -415,7 +401,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%-18s %s %s\n", key.GetPath(), segwitBech32, wif)
+		fmt.Printf("%-18s %s %s\n", key.Path, segwitBech32, wif)
 	}
 
 	fmt.Printf("\n%-18s %-62s %s\n", "Path(BIP86)", "Taproot(P2TR, bech32m)", "WIF(Wallet Import Format)")
@@ -430,7 +416,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%-18s %s %s\n", key.GetPath(), taproot, wif)
+		fmt.Printf("%-18s %s %s\n", key.Path, taproot, wif)
 	}
 
 	fmt.Printf("\n%-18s %-42s %-52s\n", "Path(BIP44)", "Ethereum(EIP55)", "Private Key(hex)")
@@ -442,7 +428,7 @@ func main() {
 		}
 
 		address := ethereumAddress(key.bip32Key.Key)
-		fmt.Printf("%-18s %s %x\n", key.GetPath(), address, key.bip32Key.Key)
+		fmt.Printf("%-18s %s %x\n", key.Path, address, key.bip32Key.Key)
 	}
 
 	fmt.Println()
