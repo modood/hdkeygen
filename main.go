@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
@@ -442,15 +441,16 @@ func main() {
 			log.Fatal(err)
 		}
 
-		privateKey, address := encodeEthereum(key.bip32Key.Key)
-		fmt.Printf("%-18s %s %s\n", key.GetPath(), address, privateKey)
+		address := ethereumAddress(key.bip32Key.Key)
+		fmt.Printf("%-18s %s %x\n", key.GetPath(), address, key.bip32Key.Key)
 	}
 
 	fmt.Println()
 }
 
-// encodeEthereum encodes the private key and address for Ethereum.
-func encodeEthereum(privateKeyBytes []byte) (privateKey, address string) {
+// ethereumAddress generates an ethereum address from a private key.
+// The private key must be 32 bytes. The address is returned with the 0x prefix and in EIP55 checksum format.
+func ethereumAddress(privateKeyBytes []byte) (address string) {
 	_, pubKey := btcec.PrivKeyFromBytes(privateKeyBytes)
 
 	// Public ECDSA Key
@@ -469,7 +469,7 @@ func encodeEthereum(privateKeyBytes []byte) (privateKey, address string) {
 	// this is ethereum address(without 0x prefix) but currently have not checksum
 	addr = addr[len(addr)-20:]
 
-	return hex.EncodeToString(privateKeyBytes), eip55checksum(fmt.Sprintf("0x%x", addr))
+	return eip55checksum(fmt.Sprintf("0x%x", addr))
 }
 
 // eip55checksum implements the EIP55 checksum address encoding.
