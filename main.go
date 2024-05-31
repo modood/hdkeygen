@@ -58,9 +58,9 @@ type Key struct {
 	bip32Key *bip32.Key
 }
 
-func (k *Key) Encode(compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
+func (k *Key) Calculate(compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
 	prvKey, _ := btcec.PrivKeyFromBytes(k.bip32Key.Key)
-	return GenerateFromBytes(prvKey, compress)
+	return CalculateFromPrivateKey(prvKey, compress)
 }
 
 // https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
@@ -252,7 +252,7 @@ func (km *KeyManager) GetKey(purpose, coinType, account, change, index uint32) (
 	return &Key{Path: path, bip32Key: key}, nil
 }
 
-func GenerateFromBytes(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
+func CalculateFromPrivateKey(prvKey *btcec.PrivateKey, compress bool) (wif, address, segwitBech32, segwitNested, taproot string, err error) {
 	// generate the wif(wallet import format) string
 	btcwif, err := btcutil.NewWIF(prvKey, &chaincfg.MainNetParams, compress)
 	if err != nil {
@@ -318,12 +318,12 @@ func main() {
 			log.Fatal(err)
 		}
 
-		wifCompressed, addressCompressed, segwitBech32, segwitNested, taproot, err := GenerateFromBytes(wif.PrivKey, true)
+		wifCompressed, addressCompressed, segwitBech32, segwitNested, taproot, err := CalculateFromPrivateKey(wif.PrivKey, true)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		wifUncompressed, addressUncompressed, _, _, _, err := GenerateFromBytes(wif.PrivKey, false)
+		wifUncompressed, addressUncompressed, _, _, _, err := CalculateFromPrivateKey(wif.PrivKey, false)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -366,7 +366,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, address, _, _, _, err := key.Encode(compress)
+		wif, address, _, _, _, err := key.Calculate(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -381,7 +381,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, _, segwitNested, _, err := key.Encode(compress)
+		wif, _, _, segwitNested, _, err := key.Calculate(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -396,7 +396,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, segwitBech32, _, _, err := key.Encode(compress)
+		wif, _, segwitBech32, _, _, err := key.Calculate(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -411,7 +411,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		wif, _, _, _, taproot, err := key.Encode(compress)
+		wif, _, _, _, taproot, err := key.Calculate(compress)
 		if err != nil {
 			log.Fatal(err)
 		}
