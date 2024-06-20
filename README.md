@@ -35,7 +35,7 @@ Running in Docker
 -----------------
 For security reasons it's recommended to start a Docker container with disabled networking:
 ```
-$ docker run --network none --rm -it <dockerhub_account_name_here>/hdkeygen
+$ docker run --network none --rm -it modood/hdkeygen
 ```
 
 Usage
